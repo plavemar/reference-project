@@ -4,6 +4,7 @@ import {faMinus} from "@fortawesome/free-solid-svg-icons";
 
 import {
     Checkbox,
+    CheckboxProps,
     Container,
     DropdownItemProps,
     DropdownProps,
@@ -16,15 +17,24 @@ import {
 } from "semantic-ui-react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
+interface TechnicalEvaluation {
+    id: number,
+    year: number,
+    value: number
+}
+
 const Calc: React.FunctionComponent = () => {
-    const [technicalEvaluationFields, setTechnicalEvaluationFields] = useState<JSX.Element[]>();
+    const [technicalEvaluationFields, setTechnicalEvaluationFields] = useState<TechnicalEvaluation[]>();
     const [lastIndex, setLastIndex] = useState(0);
 
     const [values, setValues] = useState({
         depreciationGroup: 4,
+        depreciationType: 1,
         purchaseYear: null,
         purchasePrice: null,
         isTechEvaluation: false,
+        isDepreciationSpedUp: false,
+        depreciationSpeedUp: 10,
         techEvaluations: []
     });
 
@@ -39,13 +49,33 @@ const Calc: React.FunctionComponent = () => {
         ]
     }
 
+    const createDepreciationTypeOptions = (): DropdownItemProps[] => {
+        return [
+            {value: 1, text: 'Rovnoměrné', key: 1},
+            {value: 2, text: 'Zrychlené', key: 2},
+        ]
+    }
+
+    const equalDepreciationSpeedUps = [
+        {
+            value: 10,
+            label: "10 %"
+        }, {
+            value: 15,
+            label: "15 %"
+        }, {
+            value: 20,
+            label: "20 %"
+        }
+    ];
+
     const onDelete = (event: React.MouseEvent) => {
         const id = event.currentTarget.id?.split("-")[2];
         if (!isNaN(Number(id))) {
             if (technicalEvaluationFields) {
-                const newTechnicalEvaluationFields: JSX.Element[] | undefined = technicalEvaluationFields.filter((field) => {
-                    console.log(field.props.id);
-                    return field.props.id !== `technical-evaluation-${id}`
+                const newTechnicalEvaluationFields: TechnicalEvaluation[] = technicalEvaluationFields.filter((field) => {
+                    console.log(field.id);
+                    return field.id !== Number(id);
                 });
                 setTechnicalEvaluationFields(newTechnicalEvaluationFields);
             }
@@ -57,22 +87,16 @@ const Calc: React.FunctionComponent = () => {
     const onAddTechnicalEvaluation = (event: React.MouseEvent) => {
         event.preventDefault();
         setLastIndex(lastIndex + 1);
-        const newTechnicalEvaluationFields: JSX.Element[] | undefined = technicalEvaluationFields ? [...technicalEvaluationFields] : [];
-        newTechnicalEvaluationFields.push(
-            <FormField key={`technical-evaluation-${lastIndex}`} id={`technical-evaluation-${lastIndex}`}>
-                <FormGroup>
-                    <Form.Input label={'Rok'} id={`te-year-${lastIndex}`}/>
-                    <Form.Input label={'Hodnota'} id={`te-value-${lastIndex}`}/>
-                    <Form.Button color={'red'} id={`te-delete-${lastIndex}`} onClick={onDelete}>
-                        <FontAwesomeIcon icon={faMinus}/>
-                    </Form.Button>
-                </FormGroup>
-            </FormField>
-        )
+        const newTechnicalEvaluationFields: TechnicalEvaluation[] = technicalEvaluationFields ? [...technicalEvaluationFields] : [];
+        newTechnicalEvaluationFields.push({
+            id: lastIndex,
+            year: 0,
+            value: 0
+        });
         setTechnicalEvaluationFields(newTechnicalEvaluationFields);
     }
 
-    const onDepreciationGroupChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+    const onSelectValueChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
         const name = data.name;
         const value = data.value;
 
@@ -92,21 +116,49 @@ const Calc: React.FunctionComponent = () => {
         });
     }
 
-    const onCheckboxValueChange = (event: React.SyntheticEvent<HTMLElement>) => {
-        setValues({
-            ...values,
-            isTechEvaluation: !values.isTechEvaluation
-        });
+    const onTechnicalEvaluationChange = (event: React.SyntheticEvent<HTMLElement>, data: InputOnChangeData) => {
+        const fieldId = data.id;
+        const name = data.name;
+        const value = data.value;
+
+        let updatedField: TechnicalEvaluation = {id: 0, year: 0, value: 0};
+
+        if (technicalEvaluationFields) {
+            const technicalEvaluations: TechnicalEvaluation[] = [...technicalEvaluationFields];
+            technicalEvaluations.filter(({id}) => {
+                return id === Number(fieldId.split('-')[2])
+            }).map((field) => {
+                Object.assign(updatedField, field, {[name]: value});
+                technicalEvaluations[technicalEvaluations.indexOf(field)] = updatedField;
+            });
+            setTechnicalEvaluationFields(technicalEvaluations);
+        }
+    }
+
+    const onCheckboxValueChange = (event: React.SyntheticEvent<HTMLElement>, data: CheckboxProps) => {
+        if (data.name) {
+            if(data.name === 'isTechEvaluation' && !data.checked) {
+                setTechnicalEvaluationFields([]);
+            }
+            setValues({
+                ...values,
+                [data.name]: data.checked
+            });
+        }
+    }
+
+    const onRadioValueChange = (event: React.SyntheticEvent<HTMLElement>, data: CheckboxProps) => {
+        if (data.name) {
+            setValues({
+                ...values,
+                [data.name]: data.value
+            });
+        }
     }
 
     const onSubmit = (event: React.MouseEvent) => {
         event.preventDefault();
         technicalEvaluationFields?.map((field) => {
-            if(field) {
-                const numericId = field.key?.toString().split('-')[2];
-                console.log("Year", (document.getElementById(`te-year-${numericId}`) as HTMLInputElement)?.value);
-                console.log("Value", (document.getElementById(`te-value-${numericId}`) as HTMLInputElement)?.value);
-            }
             return null;
         });
     }
@@ -122,7 +174,8 @@ const Calc: React.FunctionComponent = () => {
                                              size={'small'}
                                              options={createDepreciationGroupItems()}
                                              value={values.depreciationGroup}
-                                             name={'depreciationGroup'} onChange={onDepreciationGroupChange}/>
+                                             name={'depreciationGroup'}
+                                             onChange={onSelectValueChange}/>
                             </FormField>
                             <FormField>
                                 <Form.Input label={'Rok koupě'}
@@ -138,13 +191,56 @@ const Calc: React.FunctionComponent = () => {
                                             onChange={onInputValueChange}/>
                             </FormField>
                             <FormField>
+                                <Form.Select label={'Metoda odpisování'}
+                                             options={createDepreciationTypeOptions()}
+                                             name={'depreciationType'}
+                                             onChange={onSelectValueChange}
+                                             value={values.depreciationType}/>
+                            </FormField>
+                            <FormField>
+                                <Form.Radio toggle
+                                            label={"Urychlení odpisu v prvním roce"}
+                                            checked={values.isDepreciationSpedUp}
+                                            onChange={onCheckboxValueChange}
+                                            name={'isDepreciationSpedUp'}
+                                />
+                            </FormField>
+                            {(values.isDepreciationSpedUp && values.depreciationType === 1) && <FormField>
+                                {equalDepreciationSpeedUps.map((speedUp) => {
+                                    return <FormField>
+                                        <Form.Radio
+                                            label={speedUp.label}
+                                            name='depreciationSpeedUp'
+                                            value={speedUp.value}
+                                            checked={values.depreciationSpeedUp === speedUp.value}
+                                            onChange={onRadioValueChange}
+                                        />
+                                    </FormField>
+                                })}
+                            </FormField>}
+                            <FormField>
                                 <Checkbox label={"Obsahuje technická zhodnocení"}
                                           checked={values.isTechEvaluation}
-                                          onChange={onCheckboxValueChange}/>
+                                          onChange={onCheckboxValueChange}
+                                          name={'isTechEvaluation'}/>
                             </FormField>
-                            {technicalEvaluationFields}
+                            {values.isTechEvaluation && technicalEvaluationFields?.map((field) => {
+                                return <FormField key={`technical-evaluation-${field.id}`}
+                                                  id={`technical-evaluation-${field.id}`}>
+                                    <FormGroup>
+                                        <Form.Input label={'Rok'} id={`te-year-${field.id}`} value={field.year}
+                                                    onChange={onTechnicalEvaluationChange} name={'year'}/>
+                                        <Form.Input label={'Hodnota'} id={`te-value-${field.id}`} value={field.value}
+                                                    onChange={onTechnicalEvaluationChange} name={'value'}/>
+                                        <Form.Button color={'red'} id={`te-delete-${field.id}`} onClick={onDelete}>
+                                            <FontAwesomeIcon icon={faMinus}/>
+                                        </Form.Button>
+                                    </FormGroup>
+                                </FormField>
+                            })}
                             <FormGroup>
-                                <Form.Button onClick={onAddTechnicalEvaluation}>Přidat technické zhodnocení</Form.Button>
+                                {values.isTechEvaluation && <Form.Button onClick={onAddTechnicalEvaluation}>Přidat technické
+                                    zhodnocení</Form.Button>}
                                 <Form.Button onClick={onSubmit}>Spočítat</Form.Button>
                             </FormGroup>
                         </Form>

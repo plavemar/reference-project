@@ -1,10 +1,8 @@
 import * as React from 'react';
 import {useContext, useState} from 'react';
-import {userContext as UserContext} from "../context/UserContext";
 
 const Form: React.FunctionComponent = () => {
 
-    const {login} = useContext(UserContext);
 
     const [values, setValues] = useState({
         login: '',
@@ -31,7 +29,6 @@ const Form: React.FunctionComponent = () => {
         }
         if (values.password) {
             console.log("Loging in: ", user);
-            login(user);
         }
     }
 

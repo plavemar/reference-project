@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {useContext, useState} from 'react';
-import {userContext as UserContext} from "../context/UserContext";
 import {Container, Grid, Menu, Segment} from "semantic-ui-react";
 import 'semantic-ui-css/semantic.min.css'
 import {Link} from "react-router-dom";

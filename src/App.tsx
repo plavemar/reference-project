@@ -2,20 +2,11 @@ import React, {useEffect} from 'react';
 import './App.css';
 import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import Navigation from "./component/Navigation";
-import {useUserContext} from "./hook/UserContextHook";
-import {userContext as UserContext} from './context/UserContext'
 import Calc from "./component/depreciationCalc/Calc";
 
 const App: React.FunctionComponent = () => {
 
-    const user = useUserContext();
-
-    useEffect(() => {
-        console.log("Current user: ", user);
-    }, [user]);
-
     return (
-        <UserContext.Provider value={user}>
             <div className="App">
                 <Router>
                     <Navigation/>
@@ -35,7 +26,6 @@ const App: React.FunctionComponent = () => {
                     </Switch>
                 </Router>
             </div>
-        </UserContext.Provider>
     );
 }
 
