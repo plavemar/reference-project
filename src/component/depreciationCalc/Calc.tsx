@@ -16,8 +16,9 @@ import {
     InputOnChangeData
 } from "semantic-ui-react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import DepreciationResult from "./DepreciationResult";
 
-interface TechnicalEvaluation {
+export interface TechnicalEvaluation {
     id: number,
     year: number,
     value: number
@@ -26,12 +27,13 @@ interface TechnicalEvaluation {
 const Calc: React.FunctionComponent = () => {
     const [technicalEvaluationFields, setTechnicalEvaluationFields] = useState<TechnicalEvaluation[]>();
     const [lastIndex, setLastIndex] = useState(0);
+    const [showResults, setShowResults] = useState<boolean>(false);
 
     const [values, setValues] = useState({
         depreciationGroup: 4,
         depreciationType: 1,
-        purchaseYear: null,
-        purchasePrice: null,
+        purchaseYear: 0,
+        purchasePrice: 0,
         isTechEvaluation: false,
         isDepreciationSpedUp: false,
         depreciationSpeedUp: 10,
@@ -137,7 +139,7 @@ const Calc: React.FunctionComponent = () => {
 
     const onCheckboxValueChange = (event: React.SyntheticEvent<HTMLElement>, data: CheckboxProps) => {
         if (data.name) {
-            if(data.name === 'isTechEvaluation' && !data.checked) {
+            if (data.name === 'isTechEvaluation' && !data.checked) {
                 setTechnicalEvaluationFields([]);
             }
             setValues({
@@ -158,16 +160,14 @@ const Calc: React.FunctionComponent = () => {
 
     const onSubmit = (event: React.MouseEvent) => {
         event.preventDefault();
-        technicalEvaluationFields?.map((field) => {
-            return null;
-        });
+        setShowResults(true);
     }
 
     return (
         <React.Fragment>
             <Container>
                 <Grid divided>
-                    <GridColumn width={4}>
+                    <GridColumn width={8}>
                         <Form>
                             <FormField>
                                 <Form.Select label={'Odpisová skupina'}
@@ -239,11 +239,17 @@ const Calc: React.FunctionComponent = () => {
                                 </FormField>
                             })}
                             <FormGroup>
-                                {values.isTechEvaluation && <Form.Button onClick={onAddTechnicalEvaluation}>Přidat technické
+                                {values.isTechEvaluation &&
+                                <Form.Button onClick={onAddTechnicalEvaluation}>Přidat technické
                                     zhodnocení</Form.Button>}
                                 <Form.Button onClick={onSubmit}>Spočítat</Form.Button>
                             </FormGroup>
                         </Form>
+                    </GridColumn>
+                    <GridColumn width={8}>
+                        {showResults && <DepreciationResult {...values}
+                                                            depreciationSpeedUp={(values.isDepreciationSpedUp) ? values.depreciationType === 1 ? values.depreciationSpeedUp : 10 : 0}
+                            />}
                     </GridColumn>
                 </Grid>
             </Container>
