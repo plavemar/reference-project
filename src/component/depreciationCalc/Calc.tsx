@@ -1,5 +1,4 @@
 import * as React from "react";
-import {useState} from "react";
 import {faMinus} from "@fortawesome/free-solid-svg-icons";
 
 import {
@@ -37,8 +36,6 @@ export interface DepreciationValues {
 }
 
 const Calc: React.FunctionComponent = () => {
-    const [showResults, setShowResults] = useState<boolean>(false);
-
     const createDepreciationGroupItems = (): DropdownItemProps[] => {
         return [
             {value: 1, text: "1", key: 1},
@@ -80,14 +77,11 @@ const Calc: React.FunctionComponent = () => {
         },
     ];
 
-    const onSubmit = () => {
-        setShowResults(true);
-    };
-
     const {
         values,
         technicalEvaluations,
         errors,
+        showResult,
         handleSubmit,
         handleInputChange,
         handleDropdownChange,
@@ -95,7 +89,7 @@ const Calc: React.FunctionComponent = () => {
         handleTechnicalEvaluationChange,
         addTechnicalEvaluation,
         deleteTechnicalEvaluation
-    } = useDepreciationCalcForm(onSubmit)
+    } = useDepreciationCalcForm()
 
     return (
         <React.Fragment>
@@ -129,7 +123,7 @@ const Calc: React.FunctionComponent = () => {
                                     size={"small"}
                                     name={"purchasePrice"}
                                     value={values.purchasePrice}
-                                    error={errors.purchasePrice}
+                                    error={errors.purchasePrice || undefined}
                                     type={"number"}
                                     onChange={handleInputChange}
                                 />
@@ -226,7 +220,7 @@ const Calc: React.FunctionComponent = () => {
                         </Form>
                     </GridColumn>
                     <GridColumn width={8}>
-                        {showResults && (
+                        {showResult && (
                             <DepreciationResult
                                 {...values}
                                 depreciationSpeedUp={

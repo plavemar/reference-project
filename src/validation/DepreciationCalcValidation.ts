@@ -20,7 +20,7 @@ export const validatePurchaseYear = (year: string): string => {
 export const validatePurchasePrice = (price: string): string => {
     if(!price) {
         return "Zadejte pořizovací cenu.";
-    } else if(isNaN(Number(price)) || Number(price) < 0) {
+    } else if(isNaN(Number(price)) || Number(price) <= 0) {
         return "Zadejte celé kladné číslo."
     }
     return "";
