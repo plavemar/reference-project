@@ -48,11 +48,6 @@ const DepreciationResult: React.FunctionComponent<DepreciationResultProps> = (
 
     const techEvaluationsNotEmpty = !_.isEmpty(props.techEvaluations);
 
-
-    useEffect(() => {
-
-    }, [])
-
     useEffect(() => {
         if (currentValues.balance > 0) {
             let remainingValue = currentValues.balance;
@@ -74,7 +69,8 @@ const DepreciationResult: React.FunctionComponent<DepreciationResultProps> = (
                 currentValues.yearOrder,
                 remainingValue,
                 isTechEval,
-                depreciationGroup
+                depreciationGroup,
+                (props.purchaseYear === currentValues.year && props.isDepreciationSpedUp) ? props.depreciationSpeedUp : 0
             );
 
             remainingValue = currentValues.balance - Math.ceil(depreciation);
@@ -117,8 +113,8 @@ const DepreciationResult: React.FunctionComponent<DepreciationResultProps> = (
                                 <Table.Cell>
                                     <Label ribbon>{row.year}</Label>
                                 </Table.Cell>
-                                <Table.Cell>{row.depreciation}</Table.Cell>
-                                <Table.Cell>{row.remainingValue}</Table.Cell>
+                                <Table.Cell>{row.depreciation}&nbsp;Kč</Table.Cell>
+                                <Table.Cell>{row.remainingValue}&nbsp;Kč</Table.Cell>
                             </Table.Row>
                         );
                     })}

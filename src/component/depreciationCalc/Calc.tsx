@@ -1,26 +1,23 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {faMinus} from "@fortawesome/free-solid-svg-icons";
 
 import {
     Checkbox,
-    CheckboxProps,
     Container,
     DropdownItemProps,
-    DropdownProps,
     Form,
     FormField,
     FormGroup,
     Grid,
     GridColumn,
-    InputOnChangeData,
     Message,
 } from "semantic-ui-react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import DepreciationResult from "./DepreciationResult";
 import {DepreciationType} from "../../model/DepreciationType";
 import _ from "lodash";
-import {CalcErrors, useValidate} from "../../validation/DepreciationCalcValidation";
+import {useDepreciationCalcForm} from "../../hook/DepreciationCalcFormHook";
 
 export interface TechnicalEvaluation {
     id: number;
@@ -40,32 +37,8 @@ export interface DepreciationValues {
 }
 
 const Calc: React.FunctionComponent = () => {
-    const [technicalEvaluationFields, setTechnicalEvaluationFields] = useState<TechnicalEvaluation[]>([]);
-    const [lastIndex, setLastIndex] = useState(0);
     const [showResults, setShowResults] = useState<boolean>(false);
 
-    const [values, setValues] = useState<DepreciationValues>({
-        depreciationGroup: 1,
-        depreciationType: DepreciationType.DEPRECIATION_EQUAL,
-        purchaseYear: 0,
-        purchasePrice: 0,
-        isTechEvaluation: false,
-        isDepreciationSpedUp: false,
-        depreciationSpeedUp: 0,
-        techEvaluations: [],
-    });
-    const [errors, setErrors] = useState<CalcErrors>(
-        {
-            depreciationGroup: "",
-            depreciationType: "",
-            purchaseYear: "",
-            purchasePrice: "",
-            isTechEvaluation: "",
-            isDepreciationSpedUp: "",
-            depreciationSpeedUp: "",
-            techEvaluations: "",
-        }
-    )
     const createDepreciationGroupItems = (): DropdownItemProps[] => {
         return [
             {value: 1, text: "1", key: 1},
@@ -107,165 +80,22 @@ const Calc: React.FunctionComponent = () => {
         },
     ];
 
-    const [formValid, setFormValid] = useState<boolean>(true);
-
-    const validate = useValidate();
-
-    useEffect(() => {
-        setErrors(validate.errors);
-    }, [formValid]);
-
-
-    const onDelete = (event: React.MouseEvent) => {
-        const id = event.currentTarget.id?.split("-")[2];
-        if (!isNaN(Number(id))) {
-            const newTechnicalEvaluationFields: TechnicalEvaluation[] = technicalEvaluationFields.filter(
-                (field) => {
-                    return field.id !== Number(id);
-                }
-            );
-            setTechnicalEvaluationFields(newTechnicalEvaluationFields);
-        } else {
-            console.log("Id in a incorrect format", id);
-        }
+    const onSubmit = () => {
+        setShowResults(true);
     };
 
-    const onAddTechnicalEvaluation = (event: React.MouseEvent) => {
-        event.preventDefault();
-        setLastIndex(lastIndex + 1);
-        const newTechnicalEvaluationFields: TechnicalEvaluation[] = technicalEvaluationFields
-            ? [...technicalEvaluationFields]
-            : [];
-        newTechnicalEvaluationFields.push({
-            id: lastIndex,
-            year: 0,
-            value: 0,
-        });
-        setTechnicalEvaluationFields(newTechnicalEvaluationFields);
-    };
-
-    const onSelectValueChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: DropdownProps
-    ) => {
-        const name = data.name;
-        const value = data.value;
-
-        const depreciationGroup = (data.name === "depreciationGroup" && data.value) ? data.value : values.depreciationGroup;
-
-        setValues({
-            ...values,
-            [name]: value,
-            isDepreciationSpedUp: depreciationGroup < 4 && values.isDepreciationSpedUp,
-        });
-    };
-
-    const onPurchaseYearChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: InputOnChangeData
-    ) => {
-        setValues({
-            ...values,
-            purchaseYear: Number(data.value)
-        });
-
-        setErrors({
-            ...errors,
-            purchaseYear: validate.validatePurchaseYear(Number(data.value))
-        })
-    };
-
-    const onInputValueChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: InputOnChangeData
-    ) => {
-        const name = data.name;
-        const value = data.value;
-
-        setValues({
-            ...values,
-            [name]: {
-                value: value,
-                error: ""
-            },
-        });
-    };
-
-    const onTechnicalEvaluationChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: InputOnChangeData
-    ) => {
-        const fieldId = data.id;
-        const name = data.name;
-        const value = data.value;
-
-        let updatedField: TechnicalEvaluation = {id: 0, year: 0, value: 0};
-
-        let technicalEvaluations: TechnicalEvaluation[] = [
-            ...technicalEvaluationFields,
-        ];
-
-        technicalEvaluations
-            .filter(({id}) => {
-                return id === Number(fieldId.split("-")[2]);
-            })
-            .forEach((field) => {
-                Object.assign(updatedField, field, {[name]: value});
-                technicalEvaluations[
-                    technicalEvaluations.indexOf(field)
-                    ] = updatedField;
-            });
-
-        setTechnicalEvaluationFields(technicalEvaluations);
-    };
-
-    const onCheckboxValueChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: CheckboxProps
-    ) => {
-        if (data.name) {
-            if (data.name === "isTechEvaluation" && !data.checked) {
-                setTechnicalEvaluationFields([]);
-            }
-            setValues({
-                ...values,
-                [data.name]: {
-                    value: data.checked,
-                    error: ""
-                },
-            });
-        }
-    };
-
-    const onRadioValueChange = (
-        event: React.SyntheticEvent<HTMLElement>,
-        data: CheckboxProps
-    ) => {
-        if (data.name) {
-            setValues({
-                ...values,
-                [data.name]: {
-                    value: data.value,
-                    error: ""
-                },
-            });
-        }
-    };
-
-    const onSubmit = (event: React.MouseEvent) => {
-        event.preventDefault();
-        validate.validate(values);
-
-        if (!validate.isValid()) {
-            setFormValid(false);
-            setErrors(validate.errors);
-        }
-
-        setTimeout(() => {
-            console.log("Should result table be shown", formValid);
-            setShowResults(formValid);
-        }, 1500);
-    };
+    const {
+        values,
+        technicalEvaluations,
+        errors,
+        handleSubmit,
+        handleInputChange,
+        handleDropdownChange,
+        handleCheckboxChange,
+        handleTechnicalEvaluationChange,
+        addTechnicalEvaluation,
+        deleteTechnicalEvaluation
+    } = useDepreciationCalcForm(onSubmit)
 
     return (
         <React.Fragment>
@@ -279,9 +109,8 @@ const Calc: React.FunctionComponent = () => {
                                     size={"small"}
                                     options={createDepreciationGroupItems()}
                                     value={values.depreciationGroup}
-                                    error={errors.depreciationGroup || undefined}
                                     name={"depreciationGroup"}
-                                    onChange={onSelectValueChange}
+                                    onChange={handleDropdownChange}
                                 />
                             </FormField>
                             <FormField>
@@ -291,8 +120,7 @@ const Calc: React.FunctionComponent = () => {
                                     name={"purchaseYear"}
                                     value={values.purchaseYear}
                                     error={errors.purchaseYear || undefined}
-                                    onChange={onPurchaseYearChange}
-                                    type={'number'}
+                                    onChange={handleInputChange}
                                 />
                             </FormField>
                             <FormField>
@@ -301,8 +129,9 @@ const Calc: React.FunctionComponent = () => {
                                     size={"small"}
                                     name={"purchasePrice"}
                                     value={values.purchasePrice}
+                                    error={errors.purchasePrice}
                                     type={"number"}
-                                    onChange={onInputValueChange}
+                                    onChange={handleInputChange}
                                 />
                             </FormField>
                             <FormField>
@@ -310,7 +139,7 @@ const Calc: React.FunctionComponent = () => {
                                     label={"Metoda odpisování"}
                                     options={createDepreciationTypeOptions()}
                                     name={"depreciationType"}
-                                    onChange={onSelectValueChange}
+                                    onChange={handleDropdownChange}
                                     value={values.depreciationType}
                                 />
                             </FormField>
@@ -323,7 +152,7 @@ const Calc: React.FunctionComponent = () => {
                                     toggle
                                     label={"Urychlení odpisu v prvním roce"}
                                     checked={values.isDepreciationSpedUp}
-                                    onChange={onCheckboxValueChange}
+                                    onChange={handleCheckboxChange}
                                     name={"isDepreciationSpedUp"}
                                     disabled={values.depreciationGroup > 3}
                                 />
@@ -338,7 +167,7 @@ const Calc: React.FunctionComponent = () => {
                                                     name="depreciationSpeedUp"
                                                     value={speedUp.value}
                                                     checked={values.depreciationSpeedUp === speedUp.value}
-                                                    onChange={onRadioValueChange}
+                                                    onChange={handleCheckboxChange}
                                                 />
                                             </FormField>
                                         );
@@ -349,12 +178,12 @@ const Calc: React.FunctionComponent = () => {
                                 <Checkbox
                                     label={"Obsahuje technická zhodnocení"}
                                     checked={values.isTechEvaluation}
-                                    onChange={onCheckboxValueChange}
+                                    onChange={handleCheckboxChange}
                                     name={"isTechEvaluation"}
                                 />
                             </FormField>
                             {values.isTechEvaluation &&
-                            technicalEvaluationFields?.map((field) => {
+                            technicalEvaluations?.map((field) => {
                                 return (
                                     <FormField
                                         key={`technical-evaluation-${field.id}`}
@@ -365,20 +194,20 @@ const Calc: React.FunctionComponent = () => {
                                                 label={"Rok"}
                                                 id={`te-year-${field.id}`}
                                                 value={field.year}
-                                                onChange={onTechnicalEvaluationChange}
+                                                onChange={handleTechnicalEvaluationChange}
                                                 name={"year"}
                                             />
                                             <Form.Input
                                                 label={"Hodnota"}
                                                 id={`te-value-${field.id}`}
                                                 value={field.value}
-                                                onChange={onTechnicalEvaluationChange}
+                                                onChange={handleTechnicalEvaluationChange}
                                                 name={"value"}
                                             />
                                             <Form.Button
                                                 color={"red"}
                                                 id={`te-delete-${field.id}`}
-                                                onClick={onDelete}
+                                                onClick={deleteTechnicalEvaluation}
                                             >
                                                 <FontAwesomeIcon icon={faMinus}/>
                                             </Form.Button>
@@ -388,11 +217,11 @@ const Calc: React.FunctionComponent = () => {
                             })}
                             <FormGroup>
                                 {values.isTechEvaluation && (
-                                    <Form.Button onClick={onAddTechnicalEvaluation}>
+                                    <Form.Button onClick={addTechnicalEvaluation}>
                                         Přidat technické zhodnocení
                                     </Form.Button>
                                 )}
-                                <Form.Button onClick={onSubmit}>Spočítat</Form.Button>
+                                <Form.Button onClick={handleSubmit}>Spočítat</Form.Button>
                             </FormGroup>
                         </Form>
                     </GridColumn>
@@ -407,7 +236,7 @@ const Calc: React.FunctionComponent = () => {
                                         : 10
                                         : 0
                                 }
-                                techEvaluations={_.orderBy(technicalEvaluationFields, "year", "asc")}
+                                techEvaluations={_.orderBy(technicalEvaluations, "year", "asc")}
                             />
                         )}
                     </GridColumn>
