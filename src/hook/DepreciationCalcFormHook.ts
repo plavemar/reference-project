@@ -121,7 +121,7 @@ export const useDepreciationCalcForm = () => {
             );
             setTechnicalEvaluations(newTechnicalEvaluationFields);
         } else {
-            console.log("Id in a incorrect format", id);
+            console.error("Id in a incorrect format", id);
         }
     };
 

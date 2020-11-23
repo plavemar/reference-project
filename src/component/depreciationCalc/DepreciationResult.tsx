@@ -63,8 +63,6 @@ const DepreciationResult: React.FunctionComponent<DepreciationResultProps> = (
                 setTechEval(true);
             }
 
-            console.log("Remaining value", remainingValue);
-
             const depreciation = calculateDepreciation(
                 currentValues.yearOrder,
                 remainingValue,
